@@ -1,0 +1,117 @@
+<div class="modal-header">
+  <button (click)="modal.hide()" aria-label="Close" class="close" data-dismiss="modal" type="button">
+    <span aria-hidden="true">&times;</span>
+  </button>
+  <h3 class="modal-title" id="myModalLabel">
+    <b>Deployments of
+      <span id="build-app-name">{{app?.app_name}} {{app?.deploy_version}}</span>
+    </b>
+  </h3>
+  <ul class="nav nav-pills pages pull-left">
+    <li *ngIf ="false">
+      <a class="equalizer" [href]="'#'"></a>
+    </li>
+    <li *ngIf ="false">
+      <a class="view" [href]="'#'"></a>
+    </li>
+    <li class="active">
+      <a class="forum" [href]="'#'"></a>
+    </li>
+  </ul>
+  <div class="form-group pages pull-right calendar">
+    <label>Period
+      <input #daterange
+             (selected)="selectedDate($event, daterange)"
+             [options]="drpickerOptions"
+             class="form-control "
+             daterangepicker
+             name="daterangeInput"
+             type="text"/>
+    </label>
+  </div>
+</div>
+<div class="modal-body" id="modal-body-builds">
+  <table class="table table-striped ptable">
+    <tbody>
+
+    <tr *ngFor="let item of deployments.data">
+      <td>
+        <ng-container *ngIf="item.deploy_end_time">
+          <div class="big">{{ item.deploy_end_time + 'Z'| amLocal | amDateFormat:'ll'}}</div>
+          <b>{{ item.deploy_end_time + 'Z'| amLocal | amDateFormat:'LTS'}}</b>
+        </ng-container>
+        <ng-container *ngIf="!item.deploy_end_time">
+          <div class="big">{{ item.deploy_start_time + 'Z'| amLocal | amDateFormat:'ll'}}</div>
+          <b>{{ item.deploy_start_time + 'Z'| amLocal | amDateFormat:'LTS'}}</b>
+        </ng-container>
+      </td>
+      <td>
+        <span class="blue-label">DEPLOYED</span> &nbsp;
+        <b>{{item.deploy_instances}}</b>
+        Instance{{item.deploy_instances > 1 ? 's' : ''}}<br>
+        <div>
+          Started at
+          <b>{{ item.deploy_start_time + 'Z'| amLocal | amDateFormat:'ll LTS'}}</b>
+          <ng-container *ngIf="item.deploy_end_time"> and completed by
+            <b>{{ item.deploy_end_time + 'Z'| amLocal | amDateFormat:'ll LTS'}}</b>
+          </ng-container>
+          <br>
+          <ng-container *ngIf="item.deploy_end_time">Took
+            <b>{{ deployTime(item) | secondsToTime}}</b>
+          </ng-container>
+        </div>
+        <br>
+        Version
+        <b>{{item.version}}.{{item.build_number}}</b>
+        <div (click)="openLog(item)" [ngClass]="{
+          'green-label': item.deploy_status == 'success',
+          'red-label': item.deploy_status == 'failed',
+          'orange-label': item.deploy_status == 'running',
+          'ulinef': true
+        }">{{item.deploy_status|uppercase}}</div>
+        <span *ngIf="item.build_errors_count == 0" class="text-success">{{item.build_errors_count}} error(s)</span>
+        <span (click)="openLog(item, 'error')"
+              *ngIf="item.build_errors_count > 0"
+              class="text-danger"
+              style="cursor:pointer; text-decoration: underline">{{item.build_errors_count}} error(s)</span>
+        <br>
+        <span *ngIf="item.build_warnings_count == 0" class="text-success">{{item.build_warnings_count}}
+          warning(s)</span>
+        <span (click)="openLog(item, 'warn')"
+              *ngIf="item.build_warnings_count > 0"
+              class="text-warning"
+              style="cursor:pointer; text-decoration: underline">{{item.build_warnings_count}} warning(s)</span>
+        <br><br>
+        <div class="pull-left">Build was at
+          <b (click)="openLog(item, null, 'build')"
+             style="cursor:pointer; text-decoration: underline">{{item.build_time + 'Z'| amLocal | amDateFormat:'ll LTS'}}</b>
+        </div>
+        <div class="pull-right">
+          <button (click)="openLog(item)" class="btn btn-default mr-5">L</button>
+          <button (click)="openData(item)" class="btn btn-default">D</button>
+        </div>
+
+      </td>
+    </tr>
+
+    <tr *ngIf="loader">
+      <td align="center" colspan="2">
+        <span class="glyphicon glyphicon-refresh spinner"></span>
+      </td>
+    </tr>
+
+    <tr *ngIf="!loader && !deployments.data.length">
+      <td align="center" colspan="2">
+        <span class="text-warning">No data to display</span>
+      </td>
+    </tr>
+
+    <tr *ngIf="!loader && page < deployments.total_pages">
+      <td align="center" colspan="2">
+        <button (click)="loadMore()" class="btn">Load more</button>
+      </td>
+    </tr>
+
+    </tbody>
+  </table>
+</div>

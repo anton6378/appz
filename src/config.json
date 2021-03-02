@@ -1,0 +1,6 @@
+{
+  "logo": "/assets/images/logocc.png",
+  "footer": "© Copyright CloudControl 2019<br>Dashboard ##DASHBOARDVERSION##, Engine ##ENGINEVERSION##<br>info@eCloudControl.com<br><br>",
+  "loginBg": "/assets/images/cloudcontrol.png",
+  "title": "Cloud Admin"
+}

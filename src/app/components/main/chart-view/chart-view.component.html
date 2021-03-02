@@ -1,0 +1,201 @@
+<table class="table table-striped">
+  <tbody>
+
+  <tr>
+    <th style="white-space: nowrap">
+      Name
+      <div class="dropdown" dropdown style="display: inline-block">
+                <span [ngClass]="{
+                    'dropdown-toggle': true,
+                    'caret-sort': true,
+                    'caret-sort-active': isColumnSortedBy(['app_name'])
+                }" dropdownToggle>
+                    <span class="glyphicon glyphicon-arrow-down "></span>
+                </span>
+        <ul *dropdownMenu class="dropdown-menu">
+          <li>
+            <a (click)="addSort('app_name', '')" [ngClass]="{'bold': isSortedBy('app_name')}">Sort A-Z</a>
+          </li>
+          <li>
+            <a (click)="addSort('app_name', '-')" [ngClass]="{'bold': isSortedBy('-app_name')}">Sort Z-A</a>
+          </li>
+          <li>
+            <a (click)="resetSort(['app_name'])">Reset</a>
+          </li>
+        </ul>
+      </div>
+    </th>
+    <th style="white-space: nowrap">
+      Target
+      <div class="dropdown" dropdown style="display: inline-block">
+
+                            <span [ngClass]="{
+                                'dropdown-toggle': true,
+                                'caret-sort': true,
+                                'caret-sort-active': isColumnSortedBy(['env'])
+                            }" dropdownToggle>
+                                <span class="glyphicon glyphicon-arrow-down "></span>
+                            </span>
+        <ul *dropdownMenu class="dropdown-menu">
+          <li>
+            <a (click)="addSort('env', '')" [ngClass]="{'bold': isSortedBy('env')}">Sort A-Z</a>
+          </li>
+          <li>
+            <a (click)="addSort('env', '-')" [ngClass]="{'bold': isSortedBy('-env')}">Sort Z-A</a>
+          </li>
+          <li>
+            <a (click)="resetSort(['env'])">Reset</a>
+          </li>
+          <li>
+            <a (click)="setFilter(null)" [ngClass]="{'bold': isFilteredBy('ALL')}">ALL</a>
+          </li>
+          <li>
+            <a (click)="setFilter('DEV')" [ngClass]="{'bold': isFilteredBy('DEV')}">DEV</a>
+          </li>
+          <li>
+            <a (click)="setFilter('UA')" [ngClass]="{'bold': isFilteredBy('UA')}">UA</a>
+          </li>
+          <li>
+            <a (click)="setFilter('PROD')" [ngClass]="{'bold': isFilteredBy('PROD')}">PROD</a>
+          </li>
+        </ul>
+      </div>
+    </th>
+    <th colspan="3" style="white-space: nowrap; text-align: center">
+      Activity
+    </th>
+  </tr>
+
+  <ng-container *ngIf="loading">
+    <tr>
+      <td align="center" colspan="6">
+        <span class="glyphicon glyphicon-refresh spinner"></span>
+      </td>
+    </tr>
+  </ng-container>
+
+  <ng-container *ngIf="!loading && !appList.data.length">
+    <tr>
+      <td align="center" colspan="6">
+        <span class="text-warning">No data to display</span>
+      </td>
+    </tr>
+  </ng-container>
+
+  <ng-container *ngFor="let app of appList.data">
+    <tr>
+      <td>{{app.app_name}} {{app.version}}</td>
+      <td>
+        <div class="blue-label">{{app.env}}</div>
+      </td>
+      <td width="20%">
+        <div *ngIf="app.builds" style="height: 180px; width: 200px; margin: 0 auto; position:relative;">
+          <chart (clickElement)="buildClick($event, convertApp(app))"
+                 [data]="app.builds"
+                 [options]="options"
+                 [type]="'doughnut'"></chart>
+          <div (click)="buildStreamView(convertApp(app))"
+               style="color: #666; font-size: 0.7em; position: absolute; margin: 0 auto; width: 82px; top: 58px; left: 59px; text-align: center; cursor: pointer">
+            Builds <br>
+            <span style="font-size: 1.5em;">{{app.build.data.build_count}}</span>
+          </div>
+          <div class="small text-center" style="padding-top: 10px;">
+            <span *ngIf="app.build.data.warning_count == 0" class="text-success">0 warnings</span>
+            <span *ngIf="app.build.data.warning_count > 0" class="text-warning">
+                <span (click)="openLog(app, 'build', 'warn')"
+                      style="cursor: pointer; text-decoration: underline">{{app.build.data.warning_count}}</span>
+                warning{{app.build.data.warning_count == 1 ? '' : 's'}}
+            </span>
+            &nbsp;
+            <span *ngIf="app.build.data.error_count == 0" class="text-success">0 errors</span>
+            <span *ngIf="app.build.data.error_count > 0" class="text-danger">
+                <span (click)="openLog(app, 'build', 'error')"
+                      style="cursor: pointer; text-decoration: underline">{{app.build.data.error_count}}</span>
+                error{{app.build.data.error_count == 1 ? '' : 's'}}
+            </span>
+          </div>
+        </div>
+      </td>
+      <td width="20%">
+        <div *ngIf="app.deployments" style="height: 180px; width: 200px; margin: 0 auto; position:relative;">
+          <chart (clickElement)="deployClick($event, convertApp(app))"
+                 [data]="app.deployments"
+                 [options]="options"
+                 [type]="'doughnut'"></chart>
+          <div (click)="deploymentStreamView(convertApp(app))"
+               style="color: #666; font-size: 0.7em; position: absolute; margin: 0 auto; width: 82px; top: 58px; left: 59px; text-align: center; cursor: pointer;">
+            Deployments <br>
+            <span style="font-size: 1.5em;">{{app.deploy.data.deploy_count}}</span>
+          </div>
+          <div class="small text-center" style="padding-top: 10px;">
+            <span *ngIf="app.deploy.data.warning_count == 0" class="text-success">0 warnings</span>
+            <span *ngIf="app.deploy.data.warning_count > 0" class="text-warning">
+                                    <span (click)="openLog(app, 'deploy', 'warn')"
+                                          style="cursor: pointer; text-decoration: underline">{{app.deploy.data.warning_count}}</span>
+                                    warning{{app.deploy.data.warning_count == 1 ? '' : 's'}}
+                                </span>
+            &nbsp;
+            <span *ngIf="app.deploy.data.error_count == 0" class="text-success">0 errors</span>
+            <span *ngIf="app.deploy.data.error_count > 0" class="text-danger">
+                                    <span (click)="openLog(app, 'deploy', 'error')"
+                                          style="cursor: pointer; text-decoration: underline">{{app.deploy.data.error_count}}</span>
+                                    error{{app.deploy.data.error_count == 1 ? '' : 's'}}
+                                </span>
+          </div>
+        </div>
+      </td>
+      <td width="20%">
+        <div *ngIf="app.instances" style="height: 180px; width: 200px; margin: 0 auto; position:relative;">
+          <chart (clickElement)="monitoringView(convertApp(app))"
+                 [data]="app.instances"
+                 [options]="options"
+                 [type]="'doughnut'"></chart>
+          <div (click)="monitoringView(convertApp(app))"
+               style="color: #666; font-size: 0.7em; position: absolute; margin: 0 auto; width: 82px; top: 58px; left: 59px; text-align: center; cursor: pointer;">
+            Instances <br>
+            <span style="font-size: 1.5em;">{{app.monitor.data.instance_count}}</span>
+          </div>
+          <div class="small text-center" style="padding-top: 10px;">
+            <span [ngClass]="{'text-success': app.monitor.data.warning_count == 0, 'text-warning': app.monitor.data.warning_count > 0}">
+                {{app.monitor.data.warning_count}} warning{{app.monitor.data.warning_count == 1 ? '' : 's'}}
+            </span> &nbsp;
+            <span [ngClass]="{'text-success': app.monitor.data.error_count == 0, 'text-danger': app.monitor.data.error_count > 0}">
+                {{app.monitor.data.error_count}} error{{app.monitor.data.error_count == 1 ? '' : 's'}}
+            </span>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </ng-container>
+  </tbody>
+</table>
+
+<nav *ngIf="false" aria-label="Page navigation">
+  <ul class="pagination">
+    <li>
+      <a aria-label="Previous" [href]="'#'">
+        <span aria-hidden="true">&laquo;</span>
+      </a>
+    </li>
+    <li class="active">
+      <a [href]="'#'">1</a>
+    </li>
+    <li>
+      <a [href]="'#'">2</a>
+    </li>
+    <li>
+      <a [href]="'#'">3</a>
+    </li>
+    <li>
+      <a [href]="'#'">4</a>
+    </li>
+    <li>
+      <a [href]="'#'">5</a>
+    </li>
+    <li>
+      <a aria-label="Next" [href]="'#'">
+        <span aria-hidden="true">&raquo;</span>
+      </a>
+    </li>
+  </ul>
+</nav>

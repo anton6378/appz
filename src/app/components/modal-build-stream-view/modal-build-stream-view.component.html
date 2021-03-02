@@ -1,0 +1,137 @@
+<div class="modal-header">
+  <button (click)="modal.hide()" aria-label="Close" class="close" data-dismiss="modal" type="button">
+    <span aria-hidden="true">&times;</span>
+  </button>
+  <h3 *ngIf="build_id" class="modal-title" id="myModalLabel1">
+    <b>Build details of
+      <span id="build-app-name1">{{app?.app_name}} {{app?.build_version}}.{{app?.build_number}}</span>
+    </b>
+  </h3>
+  <h3 *ngIf="!build_id" class="modal-title" id="myModalLabel2">
+    <b>Builds of
+      <span id="build-app-name2">{{app?.app_name}} {{app?.build_version}}</span>
+    </b>
+  </h3>
+  <ul [hidden]="build_id" class="nav nav-pills pages pull-left">
+    <li *ngIf ="false">
+      <a class="equalizer" [href]="'#'"></a>
+    </li>
+    <li *ngIf ="false">
+      <a class="view" [href]="'#'"></a>
+    </li>
+    <li class="active">
+      <a class="forum" [href]="'#'"></a>
+    </li>
+  </ul>
+  <div [hidden]="build_id" class="form-group pages pull-right calendar">
+    <label>Period
+      <input #daterange
+             (selected)="selectedDate($event, daterange)"
+             [options]="drpickerOptions"
+             class="form-control "
+             daterangepicker
+             name="daterangeInput"
+             type="text"/>
+    </label>
+  </div>
+</div>
+<div class="modal-body" id="modal-body-builds">
+  <table class="table table-striped ptable">
+    <tbody>
+    <tr *ngFor="let build of builds.data">
+      <td>
+        <ng-container *ngIf="build.end_time">
+          <div class="big">{{ build.end_time + 'Z'| amLocal | amDateFormat:'ll'}}</div>
+          <b>{{ build.end_time + 'Z'| amLocal | amDateFormat:'LTS'}}</b>
+        </ng-container>
+        <ng-container *ngIf="!build.end_time">
+          <div class="big">{{ build.start_time + 'Z'| amLocal | amDateFormat:'ll'}}</div>
+          <b>{{ build.start_time + 'Z'| amLocal | amDateFormat:'LTS'}}</b>
+        </ng-container>
+      </td>
+      <td>
+
+          <div>
+            <span (click)="openLog(build)" style="cursor: pointer; text-decoration: underline"><b>{{ build.commits.length }}</b> commit(s)</span>
+
+            <div class="dropdown" dropdown dropdownToggle style="cursor: pointer; display: inline-block" *ngIf="build.commits.length">
+              &nbsp;<span class="caret"></span>&nbsp;
+              <ul *dropdownMenu class="dropdown-menu">
+                <li *ngFor="let commit of build.commits">
+                  <a href="{{commit.url}}" target="_blank">
+                    "{{commit.message | stripText}}" by {{commit.author.name}} at {{commit.timestamp | amLocal | amDateFormat:'ll LTS'}}
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            by
+            <b>{{ build.author_commit }}</b>
+          </div>
+          <div>
+            Started at
+            <b>{{ build.start_time + 'Z'| amLocal | amDateFormat:'ll LTS'}}</b>
+            <ng-container *ngIf="build.end_time"> and completed by
+              <b>{{ build.end_time + 'Z'| amLocal | amDateFormat:'ll LTS'}}</b>
+            </ng-container>
+          </div>
+          <div *ngIf="build.artifacts_size_bytes">Size
+            <b>{{build.artifacts_size_formatted}}</b>
+            ({{build.artifacts_size_bytes|number}} bytes)
+          </div>
+
+          <ng-container *ngIf="build.end_time">
+            <div>Took
+              <b>{{ buildTime(build) | secondsToTime}}</b>
+            </div>
+          </ng-container>
+          <br>
+          <div>Version
+            <b>{{build.version}}.{{build.build_number}}</b>
+          </div>
+          <div (click)="openLog(build)" [ngClass]="{
+                    'blue-label': build.status == 'success',
+                    'red-label': build.status == 'failed',
+                    'orange-label': build.status == 'running',
+                    'ulinef': true
+                }">{{build.status|uppercase}}</div>
+
+
+        <div class="pull-left">
+          <span *ngIf="build.errors_count == 0" class="text-success">{{build.errors_count}} error(s)</span>
+          <span (click)="openLog(build, 'error')"
+                *ngIf="build.errors_count > 0"
+                class="text-danger"
+                style="cursor: pointer; text-decoration: underline">{{build.errors_count}} error(s)</span>
+          <br>
+          <span *ngIf="build.warnings_count == 0" class="text-success">{{build.warnings_count}} warning(s)</span>
+          <span (click)="openLog(build, 'warn')"
+                *ngIf="build.warnings_count > 0"
+                class="text-warning"
+                style="cursor: pointer; text-decoration: underline">{{build.warnings_count}} warning(s)</span>
+        </div>
+        <div class="pull-right">
+          <button (click)="openLog(build)" class="btn btn-default mr-5">L</button>
+          <button (click)="openData(build)" class="btn btn-default">D</button>
+
+        </div>
+      </td>
+    </tr>
+    <tr *ngIf="loader">
+      <td align="center" colspan="2">
+        <span class="glyphicon glyphicon-refresh spinner"></span>
+      </td>
+    </tr>
+    <tr *ngIf="!loader && !builds.data.length">
+      <td align="center" colspan="2">
+        <span class="text-warning">No data to display</span>
+      </td>
+    </tr>
+    <tr *ngIf="!loader && page < builds.total_pages">
+      <td align="center" colspan="2">
+        <button (click)="loadMore()" class="btn">Load more</button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>

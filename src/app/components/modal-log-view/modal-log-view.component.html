@@ -1,0 +1,99 @@
+<div class="modal-header">
+  <button (click)="modal.hide()" aria-label="Close" class="close" data-dismiss="modal" type="button"><span
+    aria-hidden="true">&times;</span>
+  </button>
+  <h3 class="modal-title" id="myModalLabel">
+    <b>{{title}}</b>
+  </h3>
+  <div class="form-group pages pull-left calendar">
+    <label>
+      <input [(ngModel)]="wrapOption"
+      [ngModelOptions]="{standalone: true}"
+      (change)="changeWrapOption()"
+       type="checkbox" />
+      Text Wrap</label>
+  </div>
+  <div class="form-group pages pull-right calendar">
+    <!--<form #form="ngForm">-->
+    <label>
+      <input (change)="setFilter('all')" [(ngModel)]="filter.all" [disabled]="filterAllDisabled" name="filterall"
+             type="checkbox">
+      All/Reset</label>
+    <label style="margin-left: 10px;">
+      <input (change)="setFilter('activity')" [(ngModel)]="filter.activity" name="filteractivity"
+             type="checkbox">
+      Activity</label>
+    <label style="margin-left: 10px;">
+      <input (change)="setFilter('status')" [(ngModel)]="filter.status" name="filterstatus"
+             type="checkbox">
+      Status</label>
+    <label style="margin-left: 10px;">
+      <input (change)="setFilter('warn')" [(ngModel)]="filter.warn" name="filterwarn"
+             type="checkbox">
+      Warn</label>
+    <label style="margin-left: 10px;">
+      <input (change)="setFilter('error')" [(ngModel)]="filter.error" name="filtererror"
+             type="checkbox">
+      Error</label>
+    <!--</form>-->
+  </div>
+</div>
+<div class="modal-body" id="modal-body-builds">
+  <table class="table table-striped ltable" style="font-size: 12px;">
+    <tbody>
+
+    <ng-container *ngFor="let d of logs.data">
+      <tr *ngIf="logCount(d.lines)">
+        <td align="center" colspan="6" style="font-family: monospace">
+          {{ d.date }}
+        </td>
+      </tr>
+      <ng-container *ngFor="let item of d.lines">
+        <col span="1" class="wide">
+        <tr *ngIf="isVisible(item)">
+          <td class="number" style="font-family: monospace">{{item.idx}}</td>
+          <td class="timestamp" style="font-family: monospace; white-space: nowrap;">
+            {{item.timestamp + 'Z'| amLocal | amDateFormat:'LTS'}}</td>
+          <td class="diff" style="font-family: monospace; white-space: nowrap;">{{item.diff}}</td>
+          <td class="level" [ngClass]="{'text-info': item.level == 'info', 'text-warning': item.level == 'warn', 'text-danger': item.level == 'error'}"
+              style="font-family: monospace">
+            {{item.level}}</td>
+          <td class="log-content" style="font-family: monospace">
+            <div class="log-text" [ngClass]="{'no-wrap' : !wrapOption}" [innerHTML]="convertAnsitoHtml(item.log) | safe: 'html'"></div>
+          </td>
+          <td style="font-family: monospace">
+            <button (click)="openData(item)" *ngIf="item.data != '{}'"
+                    class="btn btn-default">D
+            </button>
+          </td>
+        </tr>
+      </ng-container>
+    </ng-container>
+
+
+    <tr *ngIf="loader">
+      <td align="center" colspan="6">
+        &nbsp;<br>
+        <span class="glyphicon glyphicon-refresh spinner"></span>
+        <br>&nbsp;
+      </td>
+    </tr>
+    <tr *ngIf="!loader && !totalLogCount()">
+      <td align="center" colspan="6">
+        <span class="text-warning">&nbsp;<br>No data to display<br>&nbsp;</span>
+      </td>
+    </tr>
+    <tr *ngIf="!loader && page < logs.total_pages && filter.all">
+      <td align="center" colspan="6">
+        <button (click)="loadMore()" class="btn">Load more</button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+  <div *ngIf="!loader && type=='deploy' && status=='success' && getLastLog()" class="text-center w-100"
+       style="margin-bottom: 20px;">
+    <button (click)="viewPostDeploymentLogs()" class="btn btn-success" style="margin-left: 20px;">View post
+      deployment logs
+    </button>
+  </div>
+</div>

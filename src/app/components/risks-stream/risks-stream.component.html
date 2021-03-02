@@ -1,0 +1,138 @@
+<div class="container">
+  <div class="header" style="display: flex;">
+    <h1>Alerts</h1>
+    <ul class="nav nav-pills pages">
+      <li>
+        <a class="equalizer" routerLink="/alerts"></a>
+      </li>
+      <li>
+        <a class="view" routerLink="/alerts/grid"></a>
+      </li>
+      <li class="active">
+        <a class="forum" routerLink="/alerts/stream"></a>
+      </li>
+    </ul>
+    <div style="flex-grow: 1"></div>
+  </div>
+
+  <table class="table table-striped ptable">
+    <tbody>
+    <ng-container *ngFor="let item of appList.data">
+      <tr *ngIf="item.type == 'alert'">
+        <td>
+          <ng-container *ngIf="item.d.data.end_time">
+            <div class="big">{{ dt(item.d.data.end_time)| amLocal | amDateFormat:'ll'}}</div>
+            <b>{{ dt(item.d.data.end_time)| amLocal | amDateFormat:'LTS'}}</b>
+          </ng-container>
+          <ng-container *ngIf="!item.d.data.end_time">
+            <div class="big">{{ dt(item.d.data.start_time)| amLocal | amDateFormat:'ll'}}</div>
+            <b>{{ dt(item.d.data.start_time)| amLocal | amDateFormat:'LTS'}}</b>
+          </ng-container>
+        </td>
+        <td>
+
+          <div *ngIf="item.d.critical_count > 0 || item.d.high_count > 0 || item.d.medium_count > 0 || item.d.low_count > 0 ">
+            FOUND
+            <span *ngIf="item.d.critical_count > 0">{{item.d.critical_count}} new Criticals</span>
+            <span *ngIf="item.d.critical_count > 0 && item.d.high_count > 0"> and </span>
+            <span *ngIf="item.d.high_count > 0">{{item.d.high_count}} new Highs</span>
+            <span *ngIf="item.d.high_count > 0 && item.d.medium_count > 0"> and </span>
+            <span *ngIf="item.d.medium_count > 0">{{item.d.medium_count}} new medium vulnerabilities</span>
+            <span *ngIf="item.d.medium_count > 0 && item.d.low_count > 0"> and </span>
+            <span *ngIf="item.d.low_count > 0">{{item.d.low_count}} new low vulnerabilities</span>
+            in <b>{{item.d.data.data.app.data.yaml.app.name}} {{item.d.data.data.input.version}}</b>
+          </div>
+          <div *ngIf="item.d.critical_count == 0 && item.d.high_count == 0 && item.d.medium_count == 0 && item.d.low_count == 0 ">
+            NOT FOUND any vulnerabilities in <b>{{item.d.data.data.app.data.yaml.app.name}} {{item.d.data.data.input.version}}</b>
+          </div>
+
+          <div>
+            Started at
+            <b>{{ dt(item.d.data.start_time)| amLocal | amDateFormat:'ll LTS'}}</b>
+            <ng-container *ngIf="item.d.data.end_time"> and completed by
+              <b>{{ dt(item.d.data.end_time)|
+                amLocal | amDateFormat:'ll LTS'}}</b>
+            </ng-container>
+          </div>
+  
+          <ng-container *ngIf="item.d.data.end_time">
+            <div>Took
+              <b>{{ buildTime(item) | secondsToTime}}</b>
+            </div>
+          </ng-container>
+          <br>
+          <div>Version
+            <b>{{item.version}}.{{item.d.build_number}}</b>
+          </div>
+
+          <div class="pull-left">
+            <span *ngIf="item.d.critical_count > 0" 
+                  class="text-danger" 
+                  data-id="critical"
+                  style="display: block; cursor: pointer; text-decoration: underline"
+                  (click)="item.d.critical_count > 0 && openLog($event, item)">
+                  {{item.d.critical_count}} critical(s)
+            </span>
+            <span *ngIf="item.d.high_count > 0"
+                  class="text-warning" 
+                  data-id="high"
+                  style="cursor: pointer; text-decoration: underline; display: block"
+                  (click)="item.d.high_count > 0 && openLog($event, item)">
+                  {{item.d.high_count}} high(s)
+            </span>
+            <span *ngIf="item.d.medium_count > 0" 
+                  class="text-warning" 
+                  data-id="medium"
+                  style="cursor: pointer; text-decoration: underline; display: block;"
+                  (click)="item.d.medium_count > 0 && openLog($event, item)">
+                  {{item.d.medium_count}} medium(s)
+            </span>
+            <span *ngIf="item.d.low_count > 0"
+                  class="text-success" 
+                  data-id="low"
+                  style="cursor: pointer; text-decoration: underline; display: block;"
+                  (click)="item.d.low_count > 0 && openLog($event, item)">
+                  {{item.d.low_count}} low(s)
+            </span>
+          </div>
+        </td>
+      </tr>
+    </ng-container>
+  
+    <tr *ngIf="loader">
+      <td align="center" colspan="2">
+        <span class="glyphicon glyphicon-refresh spinner"></span>
+      </td>
+    </tr>
+  
+    <tr *ngIf="!loader && !appList.data.length">
+      <td align="center" colspan="2">
+        <span class="text-warning">No data to display</span>
+      </td>
+    </tr>
+  
+    <tr *ngIf="!loader && page < (appList.total_pages - 1)">
+      <td align="center" colspan="2">
+        <button (click)="loadMore()" class="btn">Load more</button>
+      </td>
+    </tr>
+  
+    </tbody>
+  </table>
+  
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

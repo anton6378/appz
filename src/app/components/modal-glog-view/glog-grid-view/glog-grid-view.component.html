@@ -1,0 +1,46 @@
+<div class="graylog-data">
+  <table class="table table-striped ltable" style="font-size: 12px;">
+    <tbody>
+
+    <tr *ngIf="loader; else loaded">
+      <td align="center" colspan="3">
+        &nbsp;<br>
+        <span class="glyphicon glyphicon-refresh spinner"></span>
+        <br>&nbsp;
+      </td>
+    </tr>
+
+    <ng-template #loaded>
+      <tr *ngFor="let item of messages">
+        <td style="font-family: monospace; white-space: nowrap;">{{item.message.timestamp | amLocal | amDateFormat:'LTS'}}</td>
+        <td class="log-content">
+          <div class="log-text" [innerHTML]="convertAnsitoHtml(item.message.message) | safe: 'html'"></div>
+        </td>
+        <td class="actions">
+          <a (click)="expandMessage(item)"
+             [title]="'Instance: '+item.message.instance+', Path: '+item.message.path"
+             class="glyphicon glyphicon-resize-full mr-5"></a>
+          <a (click)="openData(item)"
+             [title]="'Instance: '+item.message.instance+', Path: '+item.message.path"
+             class="glyphicon glyphicon-search mr-5"></a>
+          <a (click)="openChart(item)" class="glyphicon glyphicon-stats"></a>
+        </td>
+      </tr>
+
+      <tr *ngIf="!messages.length && !queryError">
+        <td align="center" colspan="3">
+          <span class="text-warning">&nbsp;<br>No data to display<br>&nbsp;</span>
+        </td>
+      </tr>
+
+      <tr *ngIf="queryError">
+        <td align="center" colspan="3">
+          <span class="text-danger">&nbsp;<br>Query failed with error: {{queryError}}<br>&nbsp;</span>
+        </td>
+      </tr>
+
+    </ng-template>
+
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,285 @@
+<div class="modal-header">
+  <button (click)="modal.hide()" aria-label="Close" class="close" data-dismiss="modal" type="button">
+    <span aria-hidden="true">&times;</span>
+  </button>
+  <h3 class="modal-title" id="myModalLabel">
+    <b>
+      Logs of
+      <span id="build-app-name">{{appName}} {{appVersion}} in {{appEnv}}</span>
+    </b>
+  </h3>
+  <div>
+    <ul class="nav nav-pills pages" style="display: flex">
+      <li [ngClass]="{active: tab == 'chart'}">
+        <a (click)="setTab('chart')" class="equalizer"></a>
+      </li>
+      <li [ngClass]="{active: tab == 'grid'}">
+        <a (click)="setTab('grid')" class="view"></a>
+      </li>
+      <li [ngClass]="{active: tab == 'alert'}">
+        <a (click)="setTab('alert')"
+           class="alert"
+           style="padding: 6px 13px; font-size: 17px;">
+          <span class="glyphicon glyphicon-bell" style="top: 2px;"></span>
+        </a>
+      </li>
+      <li>
+        <button (click)="sendParams()"
+                [disabled]="!params"
+                class="btn btn-success"
+                style="margin-left: 8px;"
+                type="button">
+          <span class="glyphicon glyphicon-refresh" style="top: 2px;"></span>
+        </button>
+      </li>
+      <li>
+        <button (click)="fastForward()"
+                [disabled]="!params"
+                class="btn btn-default"
+                style="margin-left: 8px;"
+                type="button">
+          <span class="glyphicon glyphicon-fast-forward" style="top: 2px;"></span>
+        </button>
+      </li>
+      <li *ngIf="tab == 'grid'">
+        <button #copiedTooltip="bs-tooltip"
+                (click)="copy = copy + 1"
+                [tooltipAnimation]="true"
+                [tooltip]="flash"
+                class="btn btn-default" container=""
+                placement="bottom"
+                style="margin-left: 8px;" triggers=""
+                type="button">
+          <span class="far fa-copy" style="top: 2px;"></span>
+        </button>
+        <ng-template #flash>
+          <span style="white-space: nowrap">Current page<br>has been copied to clipboard</span>
+        </ng-template>
+      </li>
+      <li *ngIf="tab == 'grid' && (1 && !dlLoader)">
+        <button (click)="download()"
+                class="btn btn-default"
+                style="margin-left: 8px;"
+                type="button">
+          <span class="fas fa-cloud-download-alt" style="top: 2px;"></span>
+        </button>
+      </li>
+      <li *ngIf="tab == 'grid' && (0 || dlLoader)" style="padding-top: 8px; padding-left: 19px;">
+        <span class="glyphicon glyphicon-refresh spinner"></span>
+      </li>
+      <li style="flex-grow: 1"></li>
+      <li [ngStyle]="{display: tab == 'alert' ? 'none' : 'block' }">
+        <div class="form-group calendar" style="margin-left: 10px;">
+          <label>
+            <input #daterange
+                   (selected)="selectedDate($event, daterange)"
+                   [options]="drpickerOptions"
+                   class="form-control"
+                   daterangepicker
+                   name="daterangeInput"
+                   style="width: 100px; margin-left: 0"
+                   type="text"/>
+          </label>
+        </div>
+      </li>
+      <li [ngStyle]="{display: tab == 'alert' ? 'none' : 'block' }" style="margin-top: -20px; margin-left: 20px;">
+        <div class="form-group pull-right text-nowrap" style="width: 500px;">
+          <ng5-slider (userChangeEnd)="timeSliderChange($event)"
+                      [(value)]="time"
+                      [manualRefresh]="timeRefresh"
+                      [options]="timeSilderOptions"></ng5-slider>
+        </div>
+      </li>
+    </ul>
+    <div [ngStyle]="{display: tab == 'alert' ? 'none' : 'flex' }" style="margin-top: 20px;">
+      <div style="flex-grow: 1">
+        <input (keyup)="queryKeyup($event)"
+               (typeaheadOnSelect)="typeaheadOnSelect()"
+               [(ngModel)]="query"
+               [typeaheadIsFirstItemActive]="false"
+               [typeaheadMinLength]="0"
+               [typeahead]="history"
+               autocomplete="off"
+               class="form-control search"
+               name="query"
+               style="width: 100%;" type="text" typeaheadWaitMs="500">
+      </div>
+
+      <button #go (click)="setQuery()" class="btn btn-light" style="margin-left: 5px;">GO</button>
+
+      <div class="dropdown" dropdown style="margin-left: 20px;">
+        <button aria-expanded="true"
+                aria-haspopup="true"
+                class="btn btn-default dropdown-toggle"
+                data-toggle="dropdown"
+                dropdownToggle
+                type="button">
+          {{instance || "All instances"}}
+          <span class="caret"></span>
+        </button>
+        <ul *dropdownMenu class="dropdown-menu dropdown-menu-right">
+          <li>
+            <a (click)="setInstance(null)">All instances</a>
+          </li>
+          <li *ngFor="let i of instances">
+            <a (click)="setInstance(i)">{{i}}</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="dropdown" dropdown style="margin-left: 20px;">
+        <button aria-expanded="true"
+                aria-haspopup="true"
+                class="btn btn-default dropdown-toggle"
+                data-toggle="dropdown"
+                dropdownToggle
+                type="button">
+          {{path || "All files"}}
+          <span class="caret"></span>
+        </button>
+        <ul *dropdownMenu class="dropdown-menu dropdown-menu-right">
+          <li>
+            <a (click)="setPath(null)">All files</a>
+          </li>
+          <li *ngFor="let p of paths">
+            <a (click)="setPath(p)">{{p}}</a>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+    <div [ngStyle]="{display: tab == 'alert' ? 'none' : 'block' }" class="filter">
+      <label>
+        All/Reset
+        <input (change)="setFilter('all')"
+               [(ngModel)]="filter.all"
+               [disabled]="filterAllDisabled"
+               name="filterall"
+               type="checkbox">
+        <span class="checkmark"></span>
+      </label>
+      <label>
+        Emergency
+        <input (change)="setFilter('emerg')" [(ngModel)]="filter.emerg" name="filter1" type="checkbox">
+        <span class="checkmark"></span>
+      </label>
+      <label>
+        Alert
+        <input (change)="setFilter('alert')" [(ngModel)]="filter.alert" name="filter2" type="checkbox">
+        <span class="checkmark"></span>
+      </label>
+      <label>
+        Critical
+        <input (change)="setFilter('crit')" [(ngModel)]="filter.crit" name="filter3" type="checkbox">
+        <span class="checkmark"></span>
+      </label>
+      <label>
+        Error
+        <input (change)="setFilter('err')" [(ngModel)]="filter.err" name="filter4" type="checkbox">
+        <span class="checkmark"></span>
+      </label>
+      <label>
+        Warning
+        <input (change)="setFilter('warning')" [(ngModel)]="filter.warning" name="filter5" type="checkbox">
+        <span class="checkmark"></span>
+      </label>
+      <label>
+        Notice
+        <input (change)="setFilter('notice')" [(ngModel)]="filter.notice" name="filter6" type="checkbox">
+        <span class="checkmark"></span>
+      </label>
+      <label>
+        Informational
+        <input (change)="setFilter('info')" [(ngModel)]="filter.info" name="filter7" type="checkbox">
+        <span class="checkmark"></span>
+      </label>
+      <label>
+        Debug
+        <input (change)="setFilter('debug')" [(ngModel)]="filter.debug" name="filter8" type="checkbox">
+        <span class="checkmark"></span>
+      </label>
+    </div>
+    <div [ngStyle]="{display: tab != 'alert' ? 'none' : 'block' }" class="filter">
+      <label>
+        All
+        <input (change)="setAFilter($event)"
+               [(ngModel)]="afilter.any"
+               [disabled]="afilter.any"
+               name="any"
+               type="checkbox">
+        <span class="checkmark"></span>
+      </label>
+      <label>
+        Unresolved
+        <input (change)="setAFilter($event)" [(ngModel)]="afilter.unresolved" name="unresolved" type="checkbox">
+        <span class="checkmark"></span>
+      </label>
+      <label>
+        Resolved
+        <input (change)="setAFilter($event)" [(ngModel)]="afilter.resolved" name="resolved" type="checkbox">
+        <span class="checkmark"></span>
+      </label>
+    </div>
+  </div>
+</div>
+
+<div class="modal-body" id="modal-body-builds">
+  <app-glog-grid-view (flash)="copied()"
+                      (total)="setTotal($event)"
+                      *ngIf="tab == 'grid'"
+                      [copy]="copy"
+                      [params]="glogParams"></app-glog-grid-view>
+  <app-glog-chart-view *ngIf="tab == 'chart'" [params]="glogParams"></app-glog-chart-view>
+  <app-glog-alert-view (total)="setTotal($event)" *ngIf="tab == 'alert'" [params]="glogParams"></app-glog-alert-view>
+</div>
+<div class="modal-footer">
+  <div *ngIf="total" class="pull-left">
+    <div style="margin-bottom: -20px; text-align: left">{{(page - 1) * perPage + 1}}
+      - {{page * perPage < total ? page * perPage : total }} of {{total}} events found
+    </div>
+    <pagination (pageChanged)="changePage($event)"
+                [(ngModel)]="page"
+                [boundaryLinks]="true"
+                [itemsPerPage]="perPage"
+                [maxSize]="10"
+                [customFirstTemplate]="firstTemplate"
+                [customLastTemplate]="lastTemplate"
+                [customPreviousTemplate]="prevTemplate"
+                [customNextTemplate]="nextTemplate"
+                [rotate]="false"
+                [totalItems]="total"></pagination>
+    
+      <ng-template #nextTemplate let-disabled="disabled" let-currentPage="currentPage">
+        <ng-container *ngIf="!disabled">
+          <div [innerHTML]="pagination.next"></div>
+        </ng-container>
+        <ng-container *ngIf="disabled">
+          <div [innerHTML]="pagination.next"></div>
+        </ng-container>
+      </ng-template>
+      
+      <ng-template #prevTemplate let-disabled="disabled" let-currentPage="currentPage">
+        <ng-container *ngIf="!disabled">
+          <div [innerHTML]="pagination.prev"></div>
+        </ng-container>
+        <ng-container *ngIf="disabled">
+          <div [innerHTML]="pagination.prev"></div>
+        </ng-container>
+      </ng-template>
+      
+      <ng-template #lastTemplate let-disabled="disabled" let-currentPage="currentPage">
+        <div [innerHTML]="pagination.last"></div>
+      </ng-template>
+      
+      <ng-template #firstTemplate let-disabled="disabled" let-currentPage="currentPage">
+        <div [innerHTML]="pagination.first"></div>
+      </ng-template>
+  </div>
+  <div [ngStyle]="{display: tab == 'alert' ? 'none' : 'block' }" class="pull-right text-nowrap" style="width: 250px;">
+    <ng5-slider (userChangeEnd)="durationSliderChange($event)"
+                *ngIf="tab"
+                [(ngModel)]="duration"
+                [manualRefresh]="timeRefresh"
+                [options]="durationSliderOptions[tab]"></ng5-slider>
+  </div>
+</div>

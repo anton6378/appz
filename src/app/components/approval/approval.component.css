@@ -1,0 +1,14 @@
+.approval-tbl td {
+  padding: 5px;
+  font-size: 1.2em;
+  vertical-align: top;
+}
+
+.modal-dialog {
+  width: 650px !important;
+}
+
+.modal-body {
+  padding: 30px;
+  font-size: 1.2em;
+}

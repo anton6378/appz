@@ -1,0 +1,142 @@
+<div class="modal-header">
+  <button type="button" class="close" data-dismiss="modal" (click)="modal.hide()" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  <h3 class="modal-title" id="myModalLabel"><b>Alerts of {{title}} in {{env}}</b></h3>
+  <ul class="nav nav-pills pages" style="display: flex">
+    <li class="active"><a class="view"></a></li>
+    <li *ngIf="!dlLoader">
+      
+      <div class="dropdown btn btn-default" dropdown style="display: inline-block">
+        
+        <span class="dropdown-toggle fas fa-cloud-download-alt" dropdownToggle style="top: 2px;"></span>
+
+        <ul *dropdownMenu class="dropdown-menu">
+          <li>
+            <a (click)="download('csv')">Download CSV
+            </a>
+          </li>
+          <li>
+            <a (click)="download('pdf')">Download PDF
+            </a>
+          </li>
+        </ul>
+      </div>
+    </li>
+    <li *ngIf="(0 || dlLoader)" style="padding-top: 8px; padding-left: 19px;">
+      <span class="glyphicon glyphicon-refresh spinner"></span>
+    </li>
+    <li style="flex-grow: 1"></li>
+    <li>
+      <input name="query" type="text" class="form-control search" style="width: 250px;" [(ngModel)]="query" (keyup.enter)="loadData()">
+    </li>
+    <li>
+      <div class="form-group calendar" style="margin-left: 10px;">
+        <label>Date
+          <input class="form-control"
+                 style="width: 100px; margin-left: 0"
+                 type="text"
+                 name="daterangeInput"
+                 daterangepicker #daterange
+                 [options]="drpickerOptions"
+                 (selected)="selectedDate($event, daterange)" />
+        </label>
+      </div>
+    </li>
+  </ul>
+  <div class="clearfix"></div>
+  <div class="chart" *ngIf="loader">
+    <span class="glyphicon glyphicon-refresh spinner"></span>
+  </div>
+</div>
+<div class="modal-body" style="padding: 15px;" >
+  <div class="row" style="height: 450px; overflow-y: scroll" >
+    <div class="graylog-data">
+      <table class="table table-striped ltable w-100" style="font-size: 12px;">
+        <tbody>
+
+        <tr *ngIf="loader; else loaded">
+          <td colspan="4" align="center">
+            &nbsp;<br>
+            <span class="glyphicon glyphicon-refresh spinner"></span><br>&nbsp;
+          </td>
+        </tr>
+
+        <ng-template #loaded>
+
+          <tr *ngIf="!appList.data.length">
+            <th class="w-50">Description</th>
+            <th class="w-25">Severity</th>
+            <th class="w-20">Age</th>
+            <th class="w-5"></th>
+          </tr>
+
+          <tr *ngFor="let d of appList.data">
+            <td style="font-family: monospace; white-space: nowrap;">{{d['description']}}</td>
+            <td style="font-family: monospace; white-space: nowrap;">{{d['severity'].toUpperCase()}}</td>
+            <td style="font-family: monospace; white-space: nowrap;">{{d['age']}}</td>
+            <td class="actions">
+              <a (click)="openData(d['message'])"
+                 class="glyphicon glyphicon-search mr-5"></a>
+            </td>
+          </tr>
+
+          <tr *ngIf="!appList.data.length">
+            <td align="center" colspan="4">
+              <span class="text-warning">No search results to display</span>
+            </td>
+          </tr>
+        </ng-template>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <br>
+</div>
+<div class="modal-footer">
+  <div *ngIf="appList.total_count" class="pull-left">
+    <pagination [(ngModel)]="page"
+                (pageChanged)="changePage($event)"
+                [boundaryLinks]="true"
+                [customFirstTemplate]="firstTemplate"
+                [customLastTemplate]="lastTemplate"
+                [customPreviousTemplate]="prevTemplate"
+                [customNextTemplate]="nextTemplate"
+                [itemsPerPage]="perPage"
+                [maxSize]="10"
+                [rotate]="false"
+                [totalItems]="appList.total_count"></pagination>
+    <ng-template #nextTemplate let-disabled="disabled" let-currentPage="currentPage">
+      <ng-container *ngIf="!disabled">
+        <div [innerHTML]="pagination.next"></div>
+      </ng-container>
+      <ng-container *ngIf="disabled">
+        <div [innerHTML]="pagination.next"></div>
+      </ng-container>
+    </ng-template>
+    
+    <ng-template #prevTemplate let-disabled="disabled" let-currentPage="currentPage">
+      <ng-container *ngIf="!disabled">
+        <div [innerHTML]="pagination.prev"></div>
+      </ng-container>
+      <ng-container *ngIf="disabled">
+        <div [innerHTML]="pagination.prev"></div>
+      </ng-container>
+    </ng-template>
+    
+    <ng-template #lastTemplate let-disabled="disabled" let-currentPage="currentPage">
+      <div [innerHTML]="pagination.last"></div>
+    </ng-template>
+    
+    <ng-template #firstTemplate let-disabled="disabled" let-currentPage="currentPage">
+      <div [innerHTML]="pagination.first"></div>
+    </ng-template>
+      
+  </div>
+  <div *ngIf="appList.total_count" class="pull-right">
+    <div style="float: right; margin: 20px 0;">
+      Showing {{ (page - 1 ) * perPage + 1 }}
+      to {{ page * perPage < appList.total_count ? page * perPage : appList.total_count }}
+      of {{ appList.total_count }}
+    </div>
+  </div>
+</div>

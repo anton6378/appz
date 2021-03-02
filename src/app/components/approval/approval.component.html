@@ -1,0 +1,259 @@
+<div class="container">
+  <ng-container *ngIf="(!browseSub || browseSub.closed) && app; else loader">
+    <div class="header">
+      <h1 class="text-center">{{app.app_name}} {{app.version}} - {{app.env}} Approval</h1>
+      <hr>
+    </div>
+
+    <div class="row">
+      <div class="col-xs-8 col-xs-offset-2">
+
+        <table border="0" class="approval-tbl" width="100%">
+          <tbody>
+          <tr>
+            <td>Application</td>
+            <td>{{app.app_name}} {{app.src.version}}</td>
+            <td rowspan="8">
+              <img *ngIf="app.status == 'approved'" alt="" [src]="'/assets/images/approved.png'">
+              <img *ngIf="app.status == 'rejected'" alt="" [src]="'/assets/images/rejected.png'">
+            </td>
+          </tr>
+          <tr>
+            <td>Version:</td>
+            <td>
+              <a (click)="viewBuild()" [routerLink]="null">{{app.version}}</a>
+            </td>
+          </tr>
+          <tr>
+            <td>Requester name:</td>
+            <td>{{app.request_user_name}} - {{app.request_user}}</td>
+          </tr>
+          <tr>
+            <td>Request time:</td>
+            <td>{{app.request_time * 1000 | amLocal | amDateFormat:'ll LTS'}}</td>
+          </tr>
+          <tr>
+            <td>Requester notes:</td>
+            <td [innerHTML]="app.request_message|note"></td>
+          </tr>
+          <tr>
+            <td>Build time:</td>
+            <td>{{app.build_time | amLocal | amDateFormat:'ll LTS'}}</td>
+          </tr>
+          <tr>
+            <td>Deployment time:</td>
+            <td *ngIf="!app.deploy_time; else deptime" class="text-warning">
+              <b>Immediately upon approval</b>
+            </td>
+            <ng-template #deptime>
+              <td class="text-warning">
+                <b>{{app.deploy_time | amLocal | amDateFormat:'ll LTS'}}</b>
+              </td>
+            </ng-template>
+          </tr>
+          <tr>
+            <td>Target:</td>
+            <td>{{app.target}}</td>
+          </tr>
+          <tr>
+            <td>Emergency:</td>
+            <td *ngIf="!app.emergency" class="text-success">
+              <b>NO</b>
+            </td>
+            <td *ngIf="app.emergency" class="text-danger">
+              <b>YES</b>
+            </td>
+          </tr>
+          <tr>
+            <td>Business&nbsp;Hour&nbsp;Deployment:</td>
+            <td *ngIf="!app.business_hour" class="text-success">
+              <b>NO</b>
+            </td>
+            <td *ngIf="app.business_hour" class="text-danger">
+              <b>YES</b>
+            </td>
+          </tr>
+          <tr>
+            <td>Context&nbsp;or&nbsp;Zone:</td>
+            <td colspan="2">{{app.context}}</td>
+          </tr>
+          <tr>
+            <td>Previous Approvals:</td>
+            <td colspan="2">
+              <ng-container *ngIf="app.approvals.length == 0; else approvalsList">None</ng-container>
+              <ng-template #approvalsList>
+                <div *ngFor="let appr of app.approvals">
+                  {{appr.name}} - {{appr.user}} - {{appr.role}}
+                  @ {{appr.timestamp | amLocal | amDateFormat:'ll LTS'}}
+                  - {{appr.status | uppercase}}
+                </div>
+              </ng-template>
+
+            </td>
+          </tr>
+          </tbody>
+        </table>
+
+        <div *ngIf="!newStatus && app.status == 'waiting'" class="text-center" style="margin-top: 30px;">
+          <button (click)="confirmApprove(approveTpl, reviewTpl)" class="btn btn-success"
+                  style="width: 150px; margin-right: 20px;">Approve
+          </button>
+          <button (click)="confirmReject(rejectTpl)" class="btn btn-danger"
+                  style="width: 150px; margin-left: 20px;">Reject
+          </button>
+        </div>
+
+        <div class="text-center" style="margin-top: 30px; font-size: 1.3em;">
+
+          <ng-container *ngIf="!app.error && !app.message; else errmsg">
+            <div *ngIf="newStatus?.status == 'approved'">
+              Your
+              <span class="text-success"><b>approval</b></span>
+              of this deployment has been recorded. Thank
+              you.
+            </div>
+
+            <div *ngIf="!newStatus && app.status == 'approved'">
+              This deployment has all the approvals and is currently
+              <span class="text-success"><b>RUNNING</b></span>
+            </div>
+
+            <div *ngIf="newStatus?.status == 'rejected'">
+              Your
+              <span class="text-danger"><b>disapproval</b></span>
+              of this deployment has been recorded. This
+              deployment will not proceed.
+
+              <div class="text-muted">Reason for rejection: {{newStatus.reason}}</div>
+            </div>
+
+            <div *ngIf="!newStatus && app.status == 'rejected'">
+              This deployment was
+              <span class="text-danger"><b>rejected</b></span>
+              by ... on ...
+              <div class="text-muted">Reason for rejection: ...</div>
+            </div>
+
+          </ng-container>
+
+          <ng-template #errmsg>
+            <ng-container *ngIf="app.error; else msg">
+              {{app.error}}
+            </ng-container>
+            <ng-template #msg>
+              {{app.message}}
+            </ng-template>
+          </ng-template>
+
+        </div>
+
+
+      </div>
+    </div>
+  </ng-container>
+  <ng-template #loader>
+    <div class="text-center">
+      <span class="glyphicon glyphicon-refresh spinner"></span>
+    </div>
+  </ng-template>
+</div>
+
+<ng-template #approveTpl>
+  <div class="modal-header">
+    <button (click)="approveModal.hide()" aria-label="Close" class="close" data-dismiss="modal" type="button"><span
+      aria-hidden="true">&times;</span>
+    </button>
+    <h3 class="modal-title">Approval confirmation</h3>
+  </div>
+  
+  <div class="modal-body text-center">
+    <div *ngIf="errorOccured" class="alert alert-danger" role="alert">
+      {{ errorText }}
+    </div>
+
+    Please confirm your approval of this deployment
+
+    <div class="text-center" style="margin-top: 30px;">
+      <button (click)="approve()"
+              [disabled]="approveSub && !approveSub.closed"
+              class="btn btn-success"
+              style="width: 150px; margin-right: 20px;">Confirm
+      </button>
+      <button (click)="approveModal.hide()"
+              [disabled]="approveSub && !approveSub.closed"
+              class="btn btn-danger"
+              style="width: 150px; margin-left: 20px;">Cancel
+      </button>
+    </div>
+
+  </div>
+
+</ng-template>
+
+<ng-template #rejectTpl>
+  <div class="modal-header">
+    <button (click)="rejectModal.hide()" aria-label="Close" class="close" data-dismiss="modal" type="button"><span
+      aria-hidden="true">&times;</span>
+    </button>
+    <h3 class="modal-title">Reason for rejection</h3>
+  </div>
+  <div class="modal-body text-center">
+
+    <textarea [(ngModel)]="reason" class="form-control" name="reason" placeholder="Enter the reason here...
+(requires at least 10 characters, 2 words)" rows="6"></textarea>
+
+    <div [hidden]="!reasonError" class="text-danger text-left small">Please enter valid reason text</div>
+
+    <div class="text-center" style="margin-top: 30px;">
+      <button (click)="reject()"
+              [disabled]="rejectSub && !rejectSub.closed"
+              class="btn btn-success"
+              style="width: 150px; margin-right: 20px;">Confirm
+      </button>
+      <button (click)="rejectModal.hide()"
+              [disabled]="rejectSub && !rejectSub.closed"
+              class="btn btn-danger"
+              style="width: 150px; margin-left: 20px;">Cancel
+      </button>
+    </div>
+
+  </div>
+
+</ng-template>
+
+<ng-template #reviewTpl>
+  <div class="modal-header">
+    <button (click)="reviewModal.hide()" aria-label="Close" class="close" data-dismiss="modal" type="button"><span
+      aria-hidden="true">&times;</span>
+    </button>
+    <h3 class="modal-title">Approval confirmation</h3>
+  </div>
+  <div class="modal-body text-center">
+
+    There {{app.warning_count > 1 ? 'are ' + app.warning_count + ' warnings' : 'is ' + app.warning_count + ' warning' }}
+    in this image.
+    Please review and accept or reject {{app.warning_count > 1 ? 'these warnings' : 'this warning' }} before proceeding.
+
+    <div class="text-center" style="margin-top: 30px;">
+      <button (click)="review()"
+              [disabled]="rejectSub && !rejectSub.closed"
+              class="btn btn-default"
+              style="width: 150px; margin-right: 20px;">Review warnings
+      </button>
+
+      <button (click)="confirmAfterReview(approveTpl)"
+              [disabled]="(rejectSub && !rejectSub.closed) || !reviewed"
+              class="btn btn-success"
+              style="width: 150px; margin-right: 20px;">Confirm
+      </button>
+
+      <button (click)="rejectAfterReview(rejectTpl)"
+              [disabled]="(rejectSub && !rejectSub.closed) || !reviewed"
+              class="btn btn-danger"
+              style="width: 150px; margin-left: 20px;">Reject
+      </button>
+    </div>
+
+  </div>
+
+</ng-template>

@@ -1,0 +1,47 @@
+.row-loader {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  height: 100%;
+  display: table;
+}
+
+.row-loader span.glyphicon {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.row-loading {
+  background: rgba(0, 0, 0, 0.1);
+  color: #cecece;
+}
+
+.row-loading .blue-label {
+  color: rgb(133, 214, 251);
+}
+
+.row-loading .green-label,
+.row-loading .text-success {
+  color: rgb(159, 236, 172);
+}
+
+.alert-cell {
+  padding: 0 2.5px;
+}
+
+.monitor-col {
+  display: flex;
+  flex-direction: column;
+}
+
+span.clickable:hover {
+  cursor: pointer;
+}
+
+span.clickable:hover {
+  text-decoration: underline;
+}
+
+td {
+  padding: 8px;
+}

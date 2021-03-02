@@ -1,0 +1,18 @@
+.actions {
+  white-space: nowrap;
+}
+
+.actions a {
+  text-decoration: none;
+  color: transparent;
+  font-size: 19px;
+}
+
+.table.ltable > tbody > tr > td.actions {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+tr:hover .actions a {
+  color: rgb(3, 168, 243);
+}

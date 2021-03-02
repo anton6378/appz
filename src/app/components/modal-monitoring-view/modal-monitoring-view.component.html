@@ -1,0 +1,88 @@
+<div class="modal-header">
+  <button (click)="modal.hide()" aria-label="Close" class="close" data-dismiss="modal" type="button">
+    <span aria-hidden="true">&times;</span>
+  </button>
+  <h3 class="modal-title" id="myModalLabel">
+    <b>Monitoring of {{app?.app_name}}</b>
+    {{app?.fullversion}}</h3>
+  <ul class="nav nav-pills pages pull-left">
+    <li class="active">
+      <a class="equalizer" [href]="'#'"></a>
+    </li>
+    <li *ngIf ="false">
+      <a class="view" [href]="'#'"></a>
+    </li>
+    <li *ngIf ="false">
+      <a class="forum" [href]="'#'"></a>
+    </li>
+    <li>
+      <button (click)="reloadGraphs()"
+              class="btn btn-success"
+              style="margin-left: 8px;"
+              type="button">
+        <span class="glyphicon glyphicon-refresh" style="top: 2px;"></span>
+      </button>
+    </li>
+    <li>
+      <div *ngIf="!loader" class="dropdown" dropdown style="margin-left: 20px;">
+        <button aria-expanded="true"
+                aria-haspopup="true"
+                class="btn btn-default dropdown-toggle"
+                data-toggle="dropdown"
+                dropdownToggle
+                id="dropdownMenu1"
+                type="button">
+          {{instanceLabels[instance]}}
+          <span class="caret"></span>
+        </button>
+        <ul *dropdownMenu class="dropdown-menu">
+          <li *ngFor="let i of instances">
+            <a (click)="switchInstance(i.id)">{{i.label}}</a>
+          </li>
+        </ul>
+      </div>
+    </li>
+    <li>
+      <button (click)="openGlog()" class="btn btn-success" style="margin-left: 20px;">View logs</button>
+    </li>
+  </ul>
+  <div class="form-group pages pull-right calendar">
+    <label>Period
+      <input #daterange
+             (selected)="selectedDate($event, daterange)"
+             [options]="drpickerOptions"
+             class="form-control "
+             daterangepicker
+             name="daterangeInput"
+             type="text"/>
+    </label>
+  </div>
+  <div class="clearfix"></div>
+  <div *ngIf="loader" class="chart">
+    <span class="glyphicon glyphicon-refresh spinner"></span>
+  </div>
+</div>
+<div class="modal-body" style="padding: 15px;">
+  <div #graphsContainer class="row" style="height: 450px; overflow-y: scroll">
+    <ng-container *ngFor="let graph of graphs">
+      <div [ngClass]="graph.class">
+        <fieldset *ngIf="graph.cellType=='heading'" class="fsheading">
+          <legend align="center">{{graph.title}}</legend>
+        </fieldset>
+        <graph
+          *ngIf="showGraphs && ['info', 'chart'].indexOf(graph.cellType) >= 0"
+          [container]="graphsContainer"
+          [factor]="graph.factor"
+          [instance]="instance"
+          [labels]="rangeLabels"
+          [range]="range"
+          [series]="graph.series"
+          [title]="graph.title"
+          [type]="graph.type"
+          [unit]="graph.unit"
+        ></graph>
+      </div>
+    </ng-container>
+  </div>
+  <br>
+</div>

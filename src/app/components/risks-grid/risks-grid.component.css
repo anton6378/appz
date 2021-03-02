@@ -1,0 +1,7 @@
+.chart-row {
+    height: 262px !important;
+}
+
+.chart-row td {
+    vertical-align: middle;
+}

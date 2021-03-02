@@ -1,0 +1,44 @@
+.filter {
+
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: -10px;
+
+  label {
+    position: relative;
+    padding-left: 18px;
+    font-weight: normal;
+    padding-right: 25px;
+    cursor: pointer;
+
+    input[type=checkbox] {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+      height: 0;
+      width: 0;
+    }
+
+    input[type=checkbox] ~ .checkmark {
+      //font-family: 'Glyphicons Halflings';
+      font-family: 'Font Awesome 5 Free';
+      font-style: normal;
+      font-weight: 400;
+      line-height: 1;
+      -webkit-font-smoothing: antialiased;
+      top: 2px;
+      left: 0;
+      position: absolute;
+    }
+
+    input[type=checkbox] ~ .checkmark:after {
+      //content: "\e157";
+      content: "\f0c8";
+    }
+
+    input[type=checkbox]:checked ~ .checkmark:after {
+      //content: "\e067";
+      content: "\f14a";
+    }
+  }
+}

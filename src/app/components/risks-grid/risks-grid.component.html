@@ -1,0 +1,255 @@
+<div class="container">
+  <div class="header" style="display: flex;">
+    <h1>Alerts</h1>
+    <ul class="nav nav-pills pages">
+      <li>
+        <a class="equalizer" routerLink="/alerts"></a>
+      </li>
+      <li class="active">
+        <a class="view" routerLink="/alerts/grid"></a>
+      </li>
+      <li>
+        <a class="forum" routerLink="/alerts/stream"></a>
+      </li>
+    </ul>
+
+    <div style="flex-grow: 1"></div>
+
+    <div class="form-group calendar" style="margin-left: 10px;">
+      <label>Date
+        <input #daterange
+               (selected)="selectedDate($event, daterange)"
+               [options]="drpickerOptions"
+               class="form-control"
+               daterangepicker
+               name="daterangeInput"
+               style="width: 100px; margin-left: 0"
+               type="text"/>
+      </label>
+    </div>
+
+  </div>
+
+  <table class="table table-striped">
+    <tbody>
+
+    <tr>
+      <th style="white-space: nowrap">
+        Name
+        <div class="dropdown" dropdown style="display: inline-block">
+                <span [ngClass]="{
+                    'dropdown-toggle': true,
+                    'caret-sort': true,
+                    'caret-sort-active': isColumnSortedBy(['app_name'])
+                }" dropdownToggle>
+                    <span class="glyphicon glyphicon-arrow-down "></span>
+                </span>
+          <ul *dropdownMenu class="dropdown-menu">
+            <li>
+              <a (click)="addSort('app_name', '')" [ngClass]="{'bold': isSortedBy('app_name')}">Sort A-Z</a>
+            </li>
+            <li>
+              <a (click)="addSort('app_name', '-')" [ngClass]="{'bold': isSortedBy('-app_name')}">Sort Z-A</a>
+            </li>
+            <li>
+              <a (click)="resetSort(['app_name'])">Reset</a>
+            </li>
+          </ul>
+        </div>
+      </th>
+      <th style="white-space: nowrap">
+        Target
+        <div class="dropdown" dropdown style="display: inline-block">
+
+                            <span [ngClass]="{
+                                'dropdown-toggle': true,
+                                'caret-sort': true,
+                                'caret-sort-active': isColumnSortedBy(['env'])
+                            }" dropdownToggle>
+                                <span class="glyphicon glyphicon-arrow-down "></span>
+                            </span>
+          <ul *dropdownMenu class="dropdown-menu">
+            <li>
+              <a (click)="addSort('env', '')" [ngClass]="{'bold': isSortedBy('env')}">Sort A-Z</a>
+            </li>
+            <li>
+              <a (click)="addSort('env', '-')" [ngClass]="{'bold': isSortedBy('-env')}">Sort Z-A</a>
+            </li>
+            <li>
+              <a (click)="resetSort(['env'])">Reset</a>
+            </li>
+            <li>
+              <a (click)="setFilter(null)" [ngClass]="{'bold': isFilteredBy('ALL')}">ALL</a>
+            </li>
+            <li>
+              <a (click)="setFilter('DEV')" [ngClass]="{'bold': isFilteredBy('DEV')}">DEV</a>
+            </li>
+            <li>
+              <a (click)="setFilter('UA')" [ngClass]="{'bold': isFilteredBy('UA')}">UA</a>
+            </li>
+            <li>
+              <a (click)="setFilter('PROD')" [ngClass]="{'bold': isFilteredBy('PROD')}">PROD</a>
+            </li>
+          </ul>
+        </div>
+      </th>
+      <th style="white-space: nowrap; text-align: center">
+        Current
+      </th>
+      <th style="white-space: nowrap; text-align: center">
+        <90 days
+      </th>
+      <th style="white-space: nowrap; text-align: center">
+        90+ days
+      </th>
+    </tr>
+
+    <ng-container *ngIf="loader">
+      <tr>
+        <td align="center" colspan="6">
+          <span class="glyphicon glyphicon-refresh spinner"></span>
+        </td>
+      </tr>
+    </ng-container>
+
+    <ng-container *ngIf="!loader && false">
+      <tr>
+        <td align="center" colspan="6">
+          <span class="text-warning">No data to display</span>
+        </td>
+      </tr>
+    </ng-container>
+
+    <ng-container *ngFor="let app of appList.data">
+      <tr (inViewportAction)="inView($event, app)"
+      [inViewportOptions]="{root: container, partial: false}" inViewport class="chart-row">
+        <td>{{app.name}}</td>
+        <td>
+          <div class="blue-label">{{app.env}}</div>
+        </td>
+        <td colspan="3" *ngIf="app.loading" align="center" >
+            <span class="glyphicon glyphicon-refresh spinner"></span>
+        </td>
+        <td width="25%" *ngIf="!app.loading">
+          <div *ngIf="app.current" style="width: 200px; margin: 0 auto; position:relative;">
+            <chart (clickElement)="openLog($event, app)"
+                  [data]="app.current"
+                  [options]="options"
+                  [type]="'doughnut'"
+                  style="width: 200px; height: 200px;" ></chart>
+            <div (click)="app.current.datasets[0].data[0] + app.current.datasets[0].data[1] + app.current.datasets[0].data[2] + app.current.datasets[0].data[3] > 0 && openLog($event, app)"
+                style="color: #666; font-size: 0.7em; position: absolute; margin: 0 auto; width: 82px; top: 85px; left: 59px; text-align: center; cursor: pointer">
+              Total <br>
+              <span style="font-size: 1.5em;">{{app.current.datasets[0].data[0] + app.current.datasets[0].data[1] + app.current.datasets[0].data[2] + app.current.datasets[0].data[3]}}</span>
+            </div>
+            <div class="small text-center" style="padding-top: 10px">
+              <span class="link-elem text-criticals" style="display: inline-block">
+                <span (click)="app.current.datasets[0].data[0] > 0 && openLog($event, app)"
+                      style="cursor: pointer; text-decoration: underline">{{app.current.datasets[0].data[0]}}</span>
+                <br>Critical
+              </span>
+              &nbsp;
+              <span class="link-elem text-highs" style="display: inline-block">
+                <span (click)="app.current.datasets[0].data[1] > 0 && openLog($event, app)"
+                      style="cursor: pointer; text-decoration: underline">{{app.current.datasets[0].data[1]}}</span>
+                <br>Highs
+              </span>
+              &nbsp;
+              <span class="link-elem text-mediums" style="display: inline-block">
+                <span (click)="app.current.datasets[0].data[2] > 0 && openLog($event, app)"
+                      style="cursor: pointer; text-decoration: underline">{{app.current.datasets[0].data[2]}}</span>
+                <br>Mediums
+              </span>
+              &nbsp;
+              <span class="link-elem text-lows" style="display: inline-block">
+                <span (click)="app.current.datasets[0].data[3] > 0 && openLog($event, app)"
+                      style="cursor: pointer; text-decoration: underline">{{app.current.datasets[0].data[3]}}</span>
+                <br>Lows
+              </span>
+            </div>
+          </div>
+        </td>
+        <td width="25%" *ngIf="!app.loading">
+          <div *ngIf="app.less90" style="width: 200px; margin: 0 auto; position:relative;">
+            <chart (clickElement)="openLog($event, app)"
+                  [data]="app.less90"
+                  [options]="options"
+                  [type]="'doughnut'"
+                  style="width: 200px; height: 200px;" ></chart>
+              <div (click)="app.current.datasets[0].data[0] + app.current.datasets[0].data[1] + app.current.datasets[0].data[2] + app.current.datasets[0].data[3] > 0 && openLog($event, app)"
+                style="color: #666; font-size: 0.7em; position: absolute; margin: 0 auto; width: 82px; top: 85px; left: 59px; text-align: center; cursor: pointer">
+              Total <br>
+              <span style="font-size: 1.5em;">{{app.less90.datasets[0].data[0] + app.less90.datasets[0].data[1] + app.less90.datasets[0].data[2] + app.less90.datasets[0].data[3]}}</span>
+            </div>
+            <div class="small text-center" style="padding-top: 10px">
+              <span class="link-elem text-criticals" style="display: inline-block">
+                <span (click)="app.less90.datasets[0].data[0] > 0 && openLog($event, app)"
+                      style="cursor: pointer; text-decoration: underline">{{app.less90.datasets[0].data[0]}}</span>
+                <br>Critical
+              </span>
+              &nbsp;
+              <span class="link-elem text-highs" style="display: inline-block">
+                <span (click)="app.less90.datasets[0].data[1] > 0 && openLog($event, app)"
+                      style="cursor: pointer; text-decoration: underline">{{app.less90.datasets[0].data[1]}}</span>
+                <br>Highs
+              </span>
+              &nbsp;
+              <span class="link-elem text-mediums" style="display: inline-block">
+                <span (click)="app.less90.datasets[0].data[2] > 0 && openLog($event, app)"
+                      style="cursor: pointer; text-decoration: underline">{{app.less90.datasets[0].data[2]}}</span>
+                <br>Mediums
+              </span>
+              &nbsp;
+              <span class="link-elem text-lows" style="display: inline-block">
+                <span (click)="app.less90.datasets[0].data[3] > 0 && openLog($event, app)"
+                      style="cursor: pointer; text-decoration: underline">{{app.less90.datasets[0].data[3]}}</span>
+                <br>Lows
+              </span>
+            </div>
+          </div>
+        </td>
+        <td width="25%" *ngIf="!app.loading">
+          <div *ngIf="app.more90" style="width: 200px; margin: 0 auto; position:relative;">
+            <chart (clickElement)="openLog($event, app)"
+                  [data]="app.more90"
+                  [options]="options"
+                  [type]="'doughnut'"
+                  style="width: 200px; height: 200px;" ></chart>
+              <div (click)="app.current.datasets[0].data[0] + app.current.datasets[0].data[1] + app.current.datasets[0].data[2] + app.current.datasets[0].data[3] > 0 && openLog($event, app)"
+                style="color: #666; font-size: 0.7em; position: absolute; margin: 0 auto; width: 82px; top: 85px; left: 59px; text-align: center; cursor: pointer">
+              Total <br>
+              <span style="font-size: 1.5em;">{{app.more90.datasets[0].data[0] + app.more90.datasets[0].data[1] + app.more90.datasets[0].data[2] + app.more90.datasets[0].data[3]}}</span>
+            </div>
+            <div class="small text-center" style="padding-top: 10px">
+              <span class="link-elem text-criticals" style="display: inline-block">
+                <span (click)="app.more90.datasets[0].data[0] > 0 && openLog($event, app)"
+                      style="cursor: pointer; text-decoration: underline">{{app.more90.datasets[0].data[0]}}</span>
+                <br>Critical
+              </span>
+              &nbsp;
+              <span class="link-elem text-highs" style="display: inline-block">
+                <span (click)="app.more90.datasets[0].data[1] > 0 && openLog($event, app)"
+                      style="cursor: pointer; text-decoration: underline">{{app.more90.datasets[0].data[1]}}</span>
+                <br>Highs
+              </span>
+              &nbsp;
+              <span class="link-elem text-mediums" style="display: inline-block">
+                <span (click)="app.more90.datasets[0].data[2] > 0 && openLog($event, app)"
+                      style="cursor: pointer; text-decoration: underline">{{app.more90.datasets[0].data[2]}}</span>
+                <br>Mediums
+              </span>
+              &nbsp;
+              <span class="link-elem text-lows" style="display: inline-block">
+                <span (click)="app.more90.datasets[0].data[3] > 0 && openLog($event, app)"
+                      style="cursor: pointer; text-decoration: underline">{{app.more90.datasets[0].data[3]}}</span>
+                <br>Lows
+              </span>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </ng-container>
+    </tbody>
+  </table>
+
+</div>

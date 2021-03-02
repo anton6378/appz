@@ -1,0 +1,38 @@
+<div class="modal-header">
+  <button (click)="modal.hide()" aria-label="Close" class="close" data-dismiss="modal" type="button">
+    <span aria-hidden="true">&times;</span>
+  </button>
+  <h3 class="modal-title" id="myModalLabel">
+    <b>{{title}}</b>
+  </h3>
+</div>
+<div class="modal-body" id="modal-body-builds">
+  <br>
+  <table *ngIf="header" class="table lhtable" style="font-size: 12px;">
+    <tbody>
+    <tr>
+      <td style="font-family: monospace; white-space: nowrap;">
+        Time: {{header.timestamp + 'Z'| amLocal | amDateFormat:'ll LTS'}}</td>
+      <td style="font-family: monospace; white-space: nowrap;">Line Number: {{header.idx}}</td>
+      <td style="font-family: monospace">Level:
+        <span [ngClass]="{
+        'text-info': header.level == 'info',
+        'text-warning': header.level == 'warn',
+        'text-danger': header.level == 'error'
+      }">{{header.level ? header.level : '-'}}</span>
+      </td>
+      <td style="font-family: monospace">Status: {{header.status ? header.status : '-'}}</td>
+    </tr>
+    <tr>
+      <td colspan="4" style="font-family: monospace">Log: {{header.log}}</td>
+    </tr>
+    <tr>
+      <td colspan="4" style="text-align: center; font-family: monospace">{{lines}} line{{lines == 1 ? '' : 's'}}
+        ({{size}} bytes)
+      </td>
+    </tr>
+    </tbody>
+  </table>
+
+  <div [innerHTML]="data" class="data-view" hljsContent></div>
+</div>

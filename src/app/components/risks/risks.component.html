@@ -1,0 +1,211 @@
+<div class="container">
+  <div class="header" style="display: flex;">
+    <h1>Alerts</h1>
+    <ul class="nav nav-pills pages">
+      <li class="active">
+        <a class="equalizer" routerLink="/alerts"></a>
+      </li>
+      <li>
+        <a class="view" routerLink="/alerts/grid"></a>
+      </li>
+      <li>
+        <a class="forum" routerLink="/alerts/stream"></a>
+      </li>
+    </ul>
+
+    <div style="flex-grow: 1"></div>
+    <div class="form-group" style="margin-right: 20px;">
+      <div class="form-control days dropdown" dropdown dropdownToggle style="cursor: pointer" [ngClass]="{'disabled': layerLength <= 1 }">
+        <span>{{layers[layer]}}
+          <span class="caret"></span></span>
+        <ul *dropdownMenu class="dropdown-menu">
+          <li *ngFor="let l of layerIds">
+            <a (click)="setLayer(l == 'all' ? null : l)">{{layers[l]}}</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-right: 20px;">
+      <div class="form-control days dropdown" dropdown dropdownToggle style="cursor: pointer">
+        <span>Last {{days}} day{{days == 1 ? '' : 's'}}
+          <span class="caret"></span></span>
+        <ul *dropdownMenu class="dropdown-menu">
+          <li>
+            <a (click)="setDays(1)">1 day</a>
+          </li>
+          <li>
+            <a (click)="setDays(7)">7 days</a>
+          </li>
+          <li>
+            <a (click)="setDays(30)">30 days</a>
+          </li>
+          <li>
+            <a (click)="setDays(90)">90 days</a>
+          </li>
+          <li>
+            <a (click)="setDays(180)">180 days</a>
+          </li>
+          <li>
+            <a (click)="setDays(365)">365 days</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-right: 20px;">
+      <div class="form-control days dropdown" dropdown dropdownToggle style="cursor: pointer" [ngClass]="{'disabled': envLength <= 1 }">
+        <span>{{envs[env]}}
+          <span class="caret"></span></span>
+        <ul *dropdownMenu class="dropdown-menu">
+          <li *ngFor="let e of envIds">
+            <a (click)="setEnv(e == 'all' ? null : e)">{{envs[e]}}</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top: 20px; border-top: solid #ddd 2px; padding-top: 20px;" inViewport (inViewportAction)="inDailyView($event)"
+  [inViewportOptions]="{root: container, partial: false}">
+    <div class="col-xs-8 loader" *ngIf="dailyLoader">
+      <span class="glyphicon glyphicon-refresh spinner"></span>
+    </div>
+    <div class="col-xs-8" *ngIf="!dailyLoader">
+      <chart (clickElement)="clickElement($event)" [data]='dailyData' [options]="dailyOptions" type="line"></chart>
+    </div>
+    <div class="col-xs-4 loader" *ngIf="dailyLoader">
+      <span class="glyphicon glyphicon-refresh spinner"></span>
+    </div>
+    <div class="col-xs-4" *ngIf="!dailyLoader">
+      <div style="width: 100%; padding-top: 100%; position: relative; overflow: hidden">
+        <div style="position: absolute; top: 0; left: -80px; bottom: 0; right: -80px;">
+          <chart #pieDaily (clickElement)="clickPieChart($event, 'count')" [data]="dailyPieData" [options]="pieOptions" type="doughnut"></chart>
+          <div style="color: #666; font-size: 0.7em; position: absolute; margin: 0 auto; width: 82px; top: 112px; left: 220px; text-align: center; cursor: pointer" *ngIf="pieDaily.chart.config.data.datasets[0]"  (click)="pieDaily.chart.config.data.datasets[0].data[0] + pieDaily.chart.config.data.datasets[0].data[1] + pieDaily.chart.config.data.datasets[0].data[2] + pieDaily.chart.config.data.datasets[0].data[3] > 0 && clickPieChart($event, 'count')">
+            Total <br>
+            <span style="font-size: 1.5em;">
+            {{pieDaily.chart.config.data.datasets[0].data[0] + pieDaily.chart.config.data.datasets[0].data[1] + pieDaily.chart.config.data.datasets[0].data[2] + pieDaily.chart.config.data.datasets[0].data[3]}}
+          </span>
+          </div>
+          <div class="small text-center" style="padding-top: 10px" *ngIf="pieDaily.chart.config.data.datasets[0]">
+              <span class="link-elem text-criticals" style="display: inline-block" (click)="pieDaily.chart.config.data.datasets[0].data[0] > 0 && clickPieChart($event, 'count')">
+                <span style="cursor: pointer; text-decoration: underline">{{pieDaily.chart.config.data.datasets[0].data[0]}}</span>
+                <br>Critical
+              </span>
+            &nbsp;
+            <span class="link-elem text-highs" style="display: inline-block" (click)="pieDaily.chart.config.data.datasets[0].data[1] > 0 && clickPieChart($event, 'count')">
+                <span style="cursor: pointer; text-decoration: underline">{{pieDaily.chart.config.data.datasets[0].data[1]}}</span>
+                <br>Highs
+              </span>
+            &nbsp;
+            <span class="link-elem text-mediums" style="display: inline-block" (click)="pieDaily.chart.config.data.datasets[0].data[2] > 0 && clickPieChart($event, 'count')">
+                <span style="cursor: pointer; text-decoration: underline">{{pieDaily.chart.config.data.datasets[0].data[2]}}</span>
+                <br>Mediums
+              </span>
+            &nbsp;
+            <span class=" link-elem text-lows" style="display: inline-block" (click)="pieDaily.chart.config.data.datasets[0].data[3] > 0 && clickPieChart($event, 'count')">
+                <span style="cursor: pointer; text-decoration: underline">{{pieDaily.chart.config.data.datasets[0].data[3]}}</span>
+                <br>Lows
+              </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row" style="margin-top: 20px; border-top: solid #ddd 2px; padding-top: 20px;" inViewport (inViewportAction)="isAgeView($event)"
+  [inViewportOptions]="{root: container, partial: false}" >
+    <div class="col-xs-8 loader" *ngIf="ageLoader">
+      <span class="glyphicon glyphicon-refresh spinner"></span>
+    </div>
+    <div class="col-xs-8 text-right" *ngIf="!ageLoader">
+      <chart (clickElement)="clickElement($event)" [data]='ageData' [options]="ageOptions" type="line"></chart>
+      <ng5-slider [options]="sliderOptions" style="width: 33%; margin-top: 5px;"></ng5-slider>
+    </div>
+    <div class="col-xs-4 loader" *ngIf="ageLoader">
+      <span class="glyphicon glyphicon-refresh spinner"></span>
+    </div>
+    <div class="col-xs-4" *ngIf="!ageLoader">
+      <div style="width: 100%; padding-top: 100%; position: relative; overflow: hidden">
+        <div style="position: absolute; top: 0; left: -80px; bottom: 0; right: -80px;">
+          <chart #pieAge (clickElement)="clickPieChart($event, 'age')" [data]="agePieData" [options]="pieOptions" type="doughnut"></chart>
+          <div style="color: #666; font-size: 0.7em; position: absolute; margin: 0 auto; width: 82px; top: 112px; left: 220px; text-align: center; cursor: pointer" *ngIf="pieAge.chart.config.data.datasets[0]"  (click)="pieAge.chart.config.data.datasets[0].data[0] + pieAge.chart.config.data.datasets[0].data[1] + pieAge.chart.config.data.datasets[0].data[2] + pieAge.chart.config.data.datasets[0].data[3] > 0 && clickPieChart($event, 'age')">
+            Total <br>
+            <span style="font-size: 1.5em;" >
+            {{pieAge.chart.config.data.datasets[0].data[0] + pieAge.chart.config.data.datasets[0].data[1] + pieAge.chart.config.data.datasets[0].data[2] + pieAge.chart.config.data.datasets[0].data[3]}}
+          </span>
+          </div>
+          <div class="small text-center" style="padding-top: 10px" *ngIf="pieAge.chart.config.data.datasets[0]">
+              <span class="link-elem text-criticals" style="display: inline-block" (click)="pieAge.chart.config.data.datasets[0].data[0] > 0 && clickPieChart($event, 'age', 'critical')">
+                <span style="cursor: pointer; text-decoration: underline">{{pieAge.chart.config.data.datasets[0].data[0]}}</span>
+                <br>Critical
+              </span>
+            &nbsp;
+            <span class="link-elem text-highs" style="display: inline-block" (click)="pieAge.chart.config.data.datasets[0].data[1] > 0 && clickPieChart($event, 'age', 'high')">
+                <span style="cursor: pointer; text-decoration: underline" >{{pieAge.chart.config.data.datasets[0].data[1]}}</span>
+                <br>Highs
+              </span>
+            &nbsp;
+            <span class="link-elem text-mediums" style="display: inline-block" (click)="pieAge.chart.config.data.datasets[0].data[2] > 0 && clickPieChart($event, 'age', 'medium')">
+                <span style="cursor: pointer; text-decoration: underline">{{pieAge.chart.config.data.datasets[0].data[2]}}</span>
+                <br>Mediums
+              </span>
+            &nbsp;
+            <span class="link-elem text-lows" style="display: inline-block" (click)="pieAge.chart.config.data.datasets[0].data[3] > 0 && clickPieChart($event, 'age', 'low')">
+                <span style="cursor: pointer; text-decoration: underline">{{pieAge.chart.config.data.datasets[0].data[3]}}</span>
+                <br>Lows
+              </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row" style="margin-top: 20px; border-top: solid #ddd 2px; padding-top: 20px; padding-bottom: 20px; border-bottom: solid #ddd 2px;" inViewport (inViewportAction)="isInstanceView($event)"
+  [inViewportOptions]="{root: container, partial: false}" >
+    <div class="col-xs-8 loader" *ngIf="instanceLoader">
+      <span class="glyphicon glyphicon-refresh spinner"></span>
+    </div>
+    <div class="col-xs-8" *ngIf="!instanceLoader">
+      <chart (clickElement)="clickElement($event)"
+             [data]='affectedData'
+             [options]="affectedOptions"
+             type="line"></chart>
+    </div>
+    <div class="col-xs-4 loader" *ngIf="instanceLoader">
+      <span class="glyphicon glyphicon-refresh spinner"></span>
+    </div>
+    <div class="col-xs-4" *ngIf="!instanceLoader">
+      <div style="width: 100%; padding-top: 100%; position: relative; overflow: hidden">
+        <div style="position: absolute; top: 0; left: -80px; bottom: 0; right: -80px;">
+          <chart #pieAffected (clickElement)="clickPieChart($event, 'instance')" [data]="affectedPieData" [options]="pieOptions" type="doughnut"></chart>
+          <div style="color: #666; font-size: 0.7em; position: absolute; margin: 0 auto; width: 82px; top: 112px; left: 220px; text-align: center; cursor: pointer" *ngIf="pieAffected.chart.config.data.datasets[0]" (click)="pieAffected.chart.config.data.datasets[0].data[0] + pieAffected.chart.config.data.datasets[0].data[1] + pieAffected.chart.config.data.datasets[0].data[2] + pieAffected.chart.config.data.datasets[0].data[3] > 0 && clickPieChart($event, 'instance')">
+            Total <br>
+            <span style="font-size: 1.5em;" *ngIf="pieAffected">
+            {{pieAffected.chart.config.data.datasets[0].data[0] + pieAffected.chart.config.data.datasets[0].data[1] + pieAffected.chart.config.data.datasets[0].data[2] + pieAffected.chart.config.data.datasets[0].data[3]}}
+          </span>
+          </div>
+          <div class="small text-center" style="padding-top: 10px" *ngIf="pieAffected.chart.config.data.datasets[0]">
+              <span class="link-elem text-criticals" style="display: inline-block" (click)="pieAffected.chart.config.data.datasets[0].data[0] > 0 && clickPieChart($event, 'instance')">
+                <span style="cursor: pointer; text-decoration: underline">{{pieAffected.chart.config.data.datasets[0].data[0]}}</span>
+                <br>Critical
+              </span>
+            &nbsp;
+            <span class="link-elem text-highs" style="display: inline-block" (click)="pieAffected.chart.config.data.datasets[0].data[1] > 0 && clickPieChart($event, 'instance')">
+                <span style="cursor: pointer; text-decoration: underline">{{pieAffected.chart.config.data.datasets[0].data[1]}}</span>
+                <br>Highs
+              </span>
+            &nbsp;
+            <span class="link-elem text-mediums" style="display: inline-block" (click)="pieAffected.chart.config.data.datasets[0].data[2] > 0 && clickPieChart($event, 'instance')">
+                <span style="cursor: pointer; text-decoration: underline">{{pieAffected.chart.config.data.datasets[0].data[2]}}</span>
+                <br>Mediums
+              </span>
+            &nbsp;
+            <span class="link-elem text-lows" style="display: inline-block" (click)="pieAffected.chart.config.data.datasets[0].data[3] > 0 && clickPieChart($event, 'instance')">
+                <span style="cursor: pointer; text-decoration: underline" >{{pieAffected.chart.config.data.datasets[0].data[3]}}</span>
+                <br>Lows
+              </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

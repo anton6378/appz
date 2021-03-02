@@ -1,0 +1,50 @@
+<div class="modal-header">
+  <button (click)="modal.hide()" aria-label="Close" class="close" data-dismiss="modal" type="button"><span
+    aria-hidden="true">&times;</span>
+  </button>
+  <h3 class="modal-title" id="myModalLabel">
+    <b>Expanded Logs</b>
+    of {{app.app_name}} <br>
+    <div *ngIf="message" style="font-size: 20px;">
+      {{message.instance}} | {{message.path}} | {{thread}}
+    </div>
+  </h3>
+  <div class="clearfix"></div>
+</div>
+<div class="modal-body" style="padding: 15px;">
+  <div class="row" style="margin-left: 0 !important; margin-right: 0 !important; ">
+    <div class="col-xs-12">
+      <div *ngIf="loader; else loaded">
+        <div>
+          &nbsp;<br>
+          <span class="glyphicon glyphicon-refresh spinner"></span>
+          <br>&nbsp;
+        </div>
+      </div>
+
+      <ng-template #loaded>
+        <table class="table table-striped ltable" style="font-size: 12px;">
+          <tbody>
+          <tr *ngFor="let item of messages" [ngClass]="{'sel-msg': item.message._id==message_id}">
+            <td style="font-family: monospace; white-space: nowrap;">
+              {{item.message.timestamp | amLocal | amDateFormat:'LTS'}}</td>
+            <td class="log-content" [innerHTML]="convertAnsitoHtml(item.message.message) | safe: 'html'"></td>
+          </tr>
+
+          <tr *ngIf="!messages.length && !queryError">
+            <td align="center" colspan="3">
+              <span class="text-warning">&nbsp;<br>No data to display<br>&nbsp;</span>
+            </td>
+          </tr>
+
+          <tr *ngIf="queryError">
+            <td align="center" colspan="3">
+              <span class="text-danger">&nbsp;<br>Query failed with error: {{queryError}}<br>&nbsp;</span>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </ng-template>
+    </div>
+  </div>
+</div>

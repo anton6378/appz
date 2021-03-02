@@ -1,0 +1,34 @@
+<div class="graylog-data">
+  <table class="table table-striped ptable">
+    <tbody>
+    <tr *ngIf="loader; else loaded">
+      <td align="center" colspan="2">
+        <span class="glyphicon glyphicon-refresh spinner"></span>
+      </td>
+    </tr>
+
+    <ng-template #loaded>
+
+      <tr *ngFor="let alert of alerts">
+        <td>
+          <div class="big" style="white-space: nowrap">{{ alert.triggered_at| amLocal | amDateFormat:'ll'}}</div>
+          <b>{{ alert.triggered_at| amLocal | amDateFormat:'LTS'}}</b>
+        </td>
+        <td>
+          <div>{{alert.description}}</div>
+          <div *ngIf="alert.resolved_at">Resolved at {{alert.resolved_at | amLocal | amDateFormat:'ll LTS'}}</div>
+          <br>
+          <div (click)="openLog(alert)" *ngIf="alert.resolved_at" class="blue-label ulinef">RESOLVED</div>
+          <div (click)="openLog(alert)" *ngIf="!alert.resolved_at" class="red-label ulinef">UNRESOLVED</div>
+        </td>
+      </tr>
+      <tr *ngIf="!alerts.length">
+        <td align="center" colspan="2">
+          <span class="text-warning">No data to display</span>
+        </td>
+      </tr>
+    </ng-template>
+    </tbody>
+  </table>
+
+</div>

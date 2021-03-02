@@ -1,0 +1,31 @@
+.load-more-btn {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.actions {
+    white-space: nowrap;
+    padding: 0 !important;
+}
+
+.actions a {
+    text-decoration: none;
+    color: transparent;
+    font-size: 19px;
+}
+
+.table.ltable > tbody > tr > td.actions {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+tr:hover .actions a {
+    color: rgb(3, 168, 243);
+}
+li.active a.view {
+    pointer-events: none;
+}
+
+.graylog-data {
+    height: auto !important;
+}
